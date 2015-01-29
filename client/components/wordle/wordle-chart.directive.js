@@ -5,14 +5,14 @@ angular.module('digApp').directive('wordleChart', ['$timeout', function ($timeou
         templateUrl: 'components/wordle/wordle-chart.html',
         restrict: 'E',
         scope: {
-            chartData: '@',
+            aggregationName: '@',
+            aggregationSize: '@',
+            aggregationKey: '@',
             indexVM: '=indexvm',
             ejs: '=',
             filters: '='
         },
         link: function ($scope, element) {
-            //var margin = {top: 0, right: 0, bottom: 0, left: 0};
-            // var x = d3.scale.
             $scope.chartEl = $(element).find('.wordle-chart')[0];
             $scope.chart = null;
             $scope.htmlCanvas = null;
@@ -22,53 +22,70 @@ angular.module('digApp').directive('wordleChart', ['$timeout', function ($timeou
                 $($scope.chartEl).empty();
                 $($scope.chartEl).append(htmlCanvas);
                 $scope.htmlCanvas = $($scope.chartEl).find('.wordle-html-canvas')[0];
-                WordCloud([$scope.chartEl, $scope.htmlCanvas], options);
-                $scope.chart = $($scope.chartEl);
+                $timeout(function() {
+                    WordCloud([$scope.chartEl, $scope.htmlCanvas], options);
+                    $scope.chart = $($scope.chartEl);
+                 });
+            };
+
+            var formatData = function(data) {
+                var list = [];
+                var stopwords = ['i','a','about', 'an','and','are','as','at',
+                              'be', 'been','by','com','for', 'from','how','in',
+                              'is','it','not', 'of','on','or','that',
+                              'the','this','to','was', 'what','when','where', 'which',
+                              'who','will','with', 'www','the','<br>','br',
+                              'u','me','you','your','my','we', 'have','am', 'can', 'were', 'than','also']
+                
+                if(data.buckets.length > 0) {
+                    
+                    data.buckets.forEach(function(item) {
+                        var row = [];
+                        if($.inArray(item.key, stopwords) == -1) {
+                            row.push(item.key);
+                            row.push(item.doc_count);
+                            list.push(row);
+                            //console.log(row[0] + ":" + row[1]);
+                            
+                        }
+                    });
+                }
+                return list;
             };
 
             $scope.render = function(data) {
                 if(data) {
-                    var bodytext='';
-                    data.forEach(function (r){
-                        if(r._source) {
-                            if(r._source.hasAbstractPart) {
-                                bodytext += r._source.hasAbstractPart.text;
-                            }
-                        }
-                    });
-                    console.log("Got bodyText:" + bodytext);
-                    var wordFrequency = {
-                      workerUrl: 'components/wordle/scripts/wordfreq.worker.js' 
+                    var list = formatData(data);
+
+                    var options={};
+                    options.list = list;
+                    options.gridSize = 15;
+
+                    var multiplier = 15;
+                    if(list.length > 0) {
+                        multiplier = Math.min(multiplier, 20 / Math.log(list[0][1]))
+                    }
+                    options.weightFactor=function(size) {
+                        return multiplier * Math.sqrt(size);
                     };
-                    wordFrequency.languages=["english"];
-                    wordFrequency.stopWordSets =["english1"];
-                    wordFrequency.maxiumPhraseLength = 15;
-                    wordFrequency.minimumCount=1;
-                    // Initialize and run process() function
-                    var wordfreq = WordFreq(wordFrequency).process(bodytext, function (list) {
-                      // console.log the list returned in this callback.
-                      //console.log(list);
-                          var options={};
-                          options.list = list;
-                          options.gridSize = 20;
-                          options.weightFactor=8;
-                          options.fontFamily = 'Times, serif';
-                          //options.color = function (word, weight) {
-                           //       return (weight === 12) ? "#f0222" : "#c09292"; 
-                           //   }
-                          options.color = 'random-dark'; //random-light';
-                          options.backgroundColor = "None";
-                          options.rotateRatio=0.5;
-                          //options.origin= [90, 0];
-                          //console.log("options2:" +options2);
-                          
-                          $scope.drawWordle(options);
-                    });
+                    
+                    options.fontFamily = 'Times, serif';
+                    options.color = 'random-dark'; //random-light';
+                    options.backgroundColor = "None";
+                    options.rotateRatio=0.5;
+                    //options.wait = 2;
+                    options.abortThreshold = 500;
+                    options.abort = function() {
+                        console.log("Wordle draw aborted..was taking too long");
+                    }
+                    //options.origin= [90, 0];
+                    $scope.drawWordle(options);
                 }
             };
 
-            $scope.$watch('indexVM.results.hits', function() {
-                var data = $scope.$eval('indexVM.results.hits.' + $scope.chartData);
+            $scope.$watch('indexVM.results.aggregations', function() {
+                var data = $scope.$eval('indexVM.results.aggregations.' + $scope.aggregationName +
+                    ' || indexVM.results.aggregations.filtered_' + $scope.aggregationName + '.' + $scope.aggregationName);
                 $scope.render(data);
                 $timeout(function() {
                     // TODO: Consider replacing with something more element.  
