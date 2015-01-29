@@ -30,11 +30,11 @@
     <li class="list-group-item" ng-repeat="doc in indexVM.results.hits.hits track by $index">
       <a href="" ng-click="toggleListItemOpened(doc._id)" class="list-group-item-heading collapsed" target="_self">
         <div class="row">
+          <span ng-if="doc._source.hasImagePart">
           <div class="col-xs-3 col-sm-2 col-lg-1">
-            <span ng-if="doc._source.hasImagePart">
             <img blurred-image ng-src="{{getDisplayImageSrc(doc)}}" class="image-thumb center-block">
-            </span>
           </div>
+	  </span>
           <div class="col-xs-9 col-sm-10 col-lg-11">
             {{$eval(euiConfigs.listFields["title"][0].field)}}
             <div class="list-group-item-meta">
@@ -49,8 +49,8 @@
       <div collapse="!isListItemOpened(doc._id)" class="list-group-item-text collapse">
         <div class="row">
           <!-- ngIf: doc._source.hasImagePart -->
-          <div class="col-md-5 col-lg-4 text-center">
-            <span ng-if="doc._source.hasImagePart">
+          <span ng-if="doc._source.hasImagePart">
+            <div class="col-md-5 col-lg-4 text-center">
               <div class="image-with-caption">
                 <img blurred-image class="image-expanded center-block" ng-src="{{getDisplayImageSrc(doc)}}">
                 <div ng-if="facets.simFilter" class="caption image-search-caption" ng-click="imageSearch(getDisplayImageSrc(doc))">
@@ -58,8 +58,8 @@
                   <div class="caption-text"><i class="fa fa-search"></i> Find similar</div>
                 </div>
               </div>
-            </span>
-          </div>
+            </div>
+          </span>
 
           <div class="col-md-7 col-lg-8">
 
