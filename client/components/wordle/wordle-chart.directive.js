@@ -63,9 +63,16 @@ angular.module('digApp').directive('wordleChart', ['$timeout', function ($timeou
 
                     var multiplier = 15;
                     if(list.length > 0) {
-                        multiplier = Math.min(multiplier, 20 / Math.log(list[0][1]))
+			var size = list[0][1];
+                        multiplier = Math.min(multiplier, 20 / Math.log(size))
+
+			var sqrt = Math.sqrt(size);
+			var first = multiplier * sqrt;
+			if(first > 80)
+			  multiplier = 80/sqrt;
                     }
                     options.weightFactor=function(size) {
+			//console.log("mult:" + multiplier + ", sqrt(size):" + Math.sqrt(size) + "=" + multiplier * Math.sqrt(size));
                         return multiplier * Math.sqrt(size);
                     };
                     

@@ -41,8 +41,8 @@ var all = {
         }
     },
 
-    euiServerUrl: process.env.EUI_SERVER_URL || 'http://localhost',
-    euiServerPort: process.env.EUI_SERVER_PORT || 9200,
+    euiServerUrl: process.env.EUI_SERVER_URL || 'karma-dig-service.cloudapp.net', //'http://localhost',
+    euiServerPort: process.env.EUI_SERVER_PORT || 55310, //9200,
     euiSearchIndex: process.env.EUI_SEARCH_INDEX || 'dig-mrs-latest',
 
     imageSimUrl: process.env.IMAGE_SIM_URL || 'http://localhost',
