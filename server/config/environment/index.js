@@ -412,11 +412,19 @@ var all = {
                     title: 'Affiliation',
                     field: 'doc._source.hasFeatureCollection.affiliation_country_feature.affiliation_country || doc._source.hasFeatureCollection.affiliation_country_feature[0].affiliation_country',
                     classes: 'location'
-                }],
+                }, {
+		   title: 'DOI',
+	           field: 'doc._source.digitalObjectIdentifier',
+		   classes: 'location'
+		}],
                 "full": {
                     "1": {
                         classes: 'listing-details',
-                        fields: [{
+                        fields: [
+			{
+			   title: 'DOI',
+			   field: 'doc._source.digitalObjectIdentifier'
+			},{
                             title: 'Authors(s)',
                             field: 'doc._source.hasFeatureCollection.author_feature.author',
                             featureArray: 'doc._source.hasFeatureCollection.author_feature',
@@ -434,7 +442,8 @@ var all = {
                         },{
                             title: 'Abstract',
                             field: "doc['_source']['hasAbstractPart']['text']"
-                        }]
+                        }
+			]
                     }
                 }
             },
@@ -446,7 +455,10 @@ var all = {
                         title: 'Date',
                         field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss'",
                         classes: 'date'
-                    },{
+                    }, {
+                        title: 'DOI',
+                        field: "doc._source.digitalObjectIdentifier",
+		    }, {
                         title: 'Authors(s)',
                         field: 'doc._source.hasFeatureCollection.author_feature.author',
                         featureArray: 'doc._source.hasFeatureCollection.author_feature',
