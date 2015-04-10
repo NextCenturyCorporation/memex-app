@@ -367,7 +367,12 @@ var all = {
                 euiFilters :[],
                 //simFilter: {},
                 aggFilters: [{
-                    title: 'Author',
+                    title: 'Provider',
+                    type: 'eui-aggregation',
+                    field: 'provider_agg',
+                    terms: 'hasFeatureCollection.provider_name_feature.provider_name',
+               }, {     
+		    title: 'Author',
                     type: 'eui-aggregation',
                     field: 'author_agg',
                     terms: 'hasFeatureCollection.author_feature.author',
@@ -390,7 +395,23 @@ var all = {
                     field: 'compound_agg',
                     terms: 'hasFeatureCollection.compound_feature.compound',
                     count: 20
-                }]
+                }, {
+                    title: 'Organization',
+                    type: 'eui-aggregation',
+                    field: 'organization_agg',
+                    terms: 'hasFeatureCollection.organization_feature.organization',
+		}, {
+                    title: 'Country',
+                    type: 'eui-aggregation',
+                    field: 'country_agg',
+                    terms: 'hasFeatureCollection.wipo_country_feature.wipo_country_code',
+		},{
+                    title: 'Keywords',
+                    type: 'eui-aggregation',
+                    field: 'keywords_agg',
+                    terms: 'hasFeatureCollection.keywords_feature.keywords',
+                }
+		]
             },
 
             listFields: {
@@ -402,8 +423,8 @@ var all = {
                 }],
                 "short": [{
                     title: 'Date',
-                    field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss'",
-                    classes: 'date'
+                    field: "doc._source.dateCreated || doc._source.datePublished | date:'MM/dd/yyyy HH:mm:ss'",
+                    classes: 'date',
                 },{
                     title: 'Author',
                     field: 'doc._source.hasFeatureCollection.author_feature.author || doc._source.hasFeatureCollection.author_feature[0].author',
@@ -416,7 +437,22 @@ var all = {
 		   title: 'DOI',
 	           field: 'doc._source.digitalObjectIdentifier',
 		   classes: 'location'
-		}],
+		}, {
+		   title: 'Provider',
+		   field: 'doc._source.hasFeatureCollection.provider_name_feature.provider_name',
+		   classes: 'location'
+		}, {
+		   title: 'Country',
+		   field: 'doc._source.hasFeatureCollection.wipo_country_feature.wipo_country_code',
+		   classes: 'location',
+		   hideIfMissing: true
+                },{
+                    title: 'Organization',
+                    field: 'doc._source.hasFeatureCollection.organization_feature.organization || doc._source.hasFeatureCollection.organization_feature[0].organization',
+                    classes: 'location',
+		    hideIfMissing: true
+		}
+		],
                 "full": {
                     "1": {
                         classes: 'listing-details',
@@ -473,10 +509,45 @@ var all = {
                         field: 'doc._source.hasFeatureCollection.compound_feature.compound',
                         featureArray: 'doc._source.hasFeatureCollection.compound_feature',
                         featureValue: 'compound'
-                    },{
+                    }, {
+			title: 'Country',
+			field: "doc._source.hasFeatureCollection.wipo_country_feature.wipo_country_code",
+		        hideIfMissing: true
+		    }, {
+			title: 'Organization(s)',
+                        field: 'doc._source.hasFeatureCollection.organization_feature.organization',
+                        featureArray: 'doc._source.hasFeatureCollection.organization_feature',
+                        featureValue: 'organization',
+			hideIfMissing: true
+		    }, {
                         title: 'Abstract',
                         field: "doc['_source']['hasAbstractPart']['text']"
-                    }]
+                    }, {
+                        title: 'Keyword(s)',
+                        field: 'doc._source.hasFeatureCollection.keywords_feature.keywords',
+                        featureArray: 'doc._source.hasFeatureCollection.keywords_feature',
+                        featureValue: 'keywords',
+			hideIfMissing: true
+                    }, {
+                        title: 'Reference(s)',
+                        field: 'doc._source.isCitationOf.hasIdentifier.label',
+                        featureArray: 'doc._source.isCitationOf',
+                        featureValue: 'hasIdentifier.label',
+			hideIfMissing: true
+                    }, {
+                        title: 'Citation(s)',
+                        field: 'doc._source.citation.hasIdentifier.label',
+                        featureArray: 'doc._source.citation',
+                        featureValue: 'hasIdentifier.label',
+			hideIfMissing: true
+		    },{
+                        title: 'Full Text',
+                        field: 'doc._source.hasBodyPart.text',
+                        featureArray: 'doc._source.hasBodyPart',
+                        featureValue: 'text',
+                        hideIfMissing: true
+                    }
+		    ]
                 }
             }
         }
