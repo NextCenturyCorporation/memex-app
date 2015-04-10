@@ -31,17 +31,17 @@ angular.module('digApp').directive('wordleChart', ['$timeout', function ($timeou
             var formatData = function(data) {
                 var list = [];
                 var stopwords = ['i','a','about', 'an','and','are','as','at',
-                              'be', 'been','by','com','for', 'from','how','in',
-                              'is','it','not', 'of','on','or','that',
-                              'the','this','to','was', 'what','when','where', 'which',
-                              'who','will','with', 'www','the','<br>','br',
+                              'be', 'been','by','com','for', 'from','how','in', 'so','use',
+                              'is','it','not', 'of','on','or','that', 'self', 'their', 'such',
+                              'the','this','to','was', 'what','when','where', 'which', 'has',
+                              'who','will','with', 'www','the','<br>','br', 'no', 'both', 'due', 'up', 'more',
                               'u','me','you','your','my','we', 'have','am', 'can', 'were', 'than','also']
                 
                 if(data.buckets.length > 0) {
                     
                     data.buckets.forEach(function(item) {
                         var row = [];
-                        if($.inArray(item.key, stopwords) == -1) {
+                        if($.inArray(item.key, stopwords) == -1 && item.key.length > 1) {
                             row.push(item.key);
                             row.push(item.doc_count);
                             list.push(row);
