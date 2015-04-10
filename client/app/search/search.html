@@ -7,72 +7,84 @@
         <div class="col-sm-2 logo-container-div">
           <img src="/assets/images/dig-logo-original.png" alt="" style="margin-top:8px;margin-left:10px">
         </div>
-        <div class="col-sm-8 search-container-div">
-        <div class="controls controls-search">
-          <form ng-submit="submit()">
-          <div class="input-group input-group-lg">
-            <span class="input-group-addon"><i class="fa fa-search"></i></span>
-            <input type="text" class="form-control" placeholder="Search ..." eui-query="ejs.MatchQuery('_all', queryString.submitted)" ng-model="queryString.live" eui-enabled="queryString.submitted.length" ng-disabled="loading"/>
-            <span class="input-group-btn">
-              <button class="btn btn-cancel-input clear-search-btn" type="button" title="Clear search" ng-click="clearSearch()">
-                <i class="glyphicon glyphicon-remove clear-search-icon"></i>
-              </button>
-              <button class="btn btn-primary" type="submit">Search</button>
-              <a class="btn btn-danger" ng-href="/" target="_self">Clear All</a>
+        <div class="col-sm-9 search-container-div">
+          <div class="row">
+            <div class="col-sm-11 controls controls-search">
+              <form ng-submit="submit()">
+              <div class="input-group input-group-lg">
+                <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search ..." eui-query="ejs.QueryStringQuery(queryString.submitted).fields('_all')"
+                ng-model="queryString.live" eui-enabled="queryString.submitted.length" ng-disabled="loading"/>
+                <span class="input-group-btn">
+                  <button class="btn btn-cancel-input clear-search-btn" type="button" title="Clear search" ng-click="clearSearch()">
+                    <i class="glyphicon glyphicon-remove clear-search-icon"></i>
+                  </button>
+                  <button class="btn btn-primary search-btn" type="submit">Search</button>
+                  <a class="btn btn-danger clear-all-btn" ng-href="/" target="_self">Clear All</a>
+                </span>
+
+              </div>
+              </form>
+            </div>
+            <div class="col-sm-1" >
+              <span class="pull-right">
+                <a href="#" class="dropdown-toggle" id="settingsMenu" data-toggle="dropdown" aria-expanded="false">
+                  <button class="btn-settings"><i class="fa fa-cog fa-lg"></i></button>
+                </a>
+                <ul class="dropdown-menu" role="settingsMenu" aria-labelledby="settingsMenu">
+                  <li role="setting">
+                    <a role="menuitem" tabindex="-1" ng-href="#"  ng-click="changeBlur()">
+                      <span ng-if="isBlurred"><input type="checkbox" ng-checked="true"></span>
+                      <span ng-if="!isBlurred"><input type="checkbox" ng-checked="false"></span>
+                      Blur Images
+                    </a>
+                  </li>
+                  <li class="divider"></li>
+                  <li role="setting">
+                    <a role="menuitem" tabindex="-1" ng-href="#" ng-click="openAbout()">
+                      About DIG
+                    </a>
+                  </li>
+                </ul>
+              </span>
+            </div>
+          </div>
+          <div class="row breadcrumb-box">
+            <span ng-if="filterStates.withImagesOnly">
+              <span class="search-facet">
+                With Images Only <i class="fa fa-times-circle" ng-click="filterStates.withImagesOnly = !filterStates.withImagesOnly"></i>
+              </span>
+            </span>
+            <span ng-repeat="aggFilter in facets.aggFilters">
+              <span ng-if="includeMissing.aggregations[aggFilter.field].active" class="search-facet include-missing">
+                {{aggFilter.title}}: Not Specified
+                <i class="fa fa-times-circle" ng-click="removeMissingFilter(aggFilter.field)"></i>
+              </span>
+              <span ng-repeat="(filterKey, selected) in filterStates.aggFilters[aggFilter.field]">
+                <span ng-if="selected" class="search-facet">
+                  {{aggFilter.title}}: {{filterKey}}
+                  <i class="fa fa-times-circle" ng-click="removeAggFilter(aggFilter.field, filterKey)"></i>
+                </span>
+              </span>
+            </span>
+            <span ng-repeat="textFilter in facets.euiFilters">
+              <span ng-if="filterStates.textFilters[textFilter.field].submitted.length > 0" class="search-facet">
+                {{textFilter.title}}: {{filterStates.textFilters[textFilter.field].submitted}}
+                <i class="fa fa-times-circle" ng-click="removeTextFilter(textFilter.field)"></i>
+              </span>
+            </span>
+            <span ng-repeat="(dateFilter, values) in filterStates.dateFilters">
+               <span ng-repeat="(filterKey, date) in values">
+                <span ng-if="date" class="search-facet">
+                  {{filterKey}}: {{ date | date : 'MM/dd/yyyy'}} <i class="fa fa-times-circle" ng-click="removeDateFilter(dateFilter, filterKey)"></i>
+                </span>
+              </span>
             </span>
           </div>
-          </form>
-        </div>
-        <div>
-          <span ng-repeat="(aggFilter, values) in filterStates.aggFilters">
-            <span ng-repeat="(filterKey, selected) in values">
-              <span ng-if="selected" class="search-facet" ng-click="removeAggFilter(aggFilter, filterKey)">{{filterKey}} <i class="fa fa-times-circle"></i></span>
-            </span>
-          </span>
-          <span ng-repeat="(textFilter, values) in filterStates.textFilters">
-            <span ng-if="values.submitted.length > 0" class="search-facet" ng-click="removeTextFilter(textFilter)">{{values.submitted}} <i class="fa fa-times-circle"></i></span>
-          </span>
-        </div>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="row" ng-show="showresults">
-    <div class="left-column hidden-xs col-sm-3 col-lg-2">
-      <div class="column-header">
-        <!-- TODO: Implement Clear All button - commenting out for now -->
-        <!-- <a href="#" class="text-danger pull-right"><i class="fa fa-times-circle"></i> Clear All</a> -->
-        <h4>Filter</h4>
-      </div>
-
-      <text-filter ng-repeat="filter in facets.euiFilters" filter-title="{{filter.title}}"
-        filter-field="{{filter.field}}" indexvm="indexVM" ejs="ejs" filters="filters" loading="loading" filter-states="filterStates.textFilters">
-      </text-filter>
-
-      <div ng-if="facets.simFilter" class="form-group" ng-show="getActiveImageSearch()">
-        <h5><i class="fa fa-chevron-down fa-fw"></i> {{facets.simFilter.title}} <a href="#" class="pull-right" title="Search values"><i class="fa fa-search"></i></a></h5>
-        <div>
-          <div class="checkbox image-search-filter">
-            <label>
-              <input type="checkbox" ng-model="searchConfig.filterByImage"
-                eui-filter="ejs.TermFilter(facets.simFilter.field, getActiveImageSearch().url)"
-                eui-enabled="searchConfig.filterByImage">
-            </label>
-            <img blurred-image ng-src="{{getActiveImageSearch().url}}" class="image-thumb">
-            <a href="#" ng-click="clearActiveImageSearch()" class="text-danger">
-              <i class="fa fa-times-circle pull-right"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <collapse-filter ng-repeat="filter in facets.aggFilters" title="{{filter.title}}" closed="false">
-        <checkbox-filter aggregation-name="{{filter.field}}" aggregation-key="{{filter.terms}}" aggregation-count="filter.count"
-          indexvm="indexVM" ejs="ejs" filters="filters" filter-states="filterStates.aggFilters">
-        </checkbox-filter>
-      </collapse-filter>
-    </div>
 
     <div class="right-column col-sm-9">
       <div class="row">
@@ -89,3 +101,4 @@
     </div>
   </div>
 </div>
+

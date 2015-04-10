@@ -4,6 +4,13 @@
 @icon-font-path: '/bower_components/bootstrap/fonts/';
 @fa-font-path: '/bower_components/font-awesome/fonts';
 
+@black: #000;
+@background: #F4EFEC;
+
+@light-gray: #d8d8d8;
+@mid-gray: #c0c0c0;
+@dark-gray: #989898;
+
 /**
  * App-wide Styles
  */
@@ -16,7 +23,7 @@
 }
 
 body{
-	background-color: #f4efec;
+	background-color: @background;
 	font-family: 'Lato', sans-serif;
 }
 
@@ -130,7 +137,7 @@ hr{
 }
 .right-column{
 	box-shadow: -1px 0 0 #ddd8d4;
-	
+
 }
 .left-column{
 	border-right: 1px solid #ddd8d4;
@@ -372,6 +379,25 @@ label{
 	box-shadow: none;;
 }
 
+.btn-settings {
+	position: relative;
+	padding-top: 10px;
+	color: #cccccc;
+	background: #f4efec;
+	box-shadow: none;
+	font-size: 32px;
+	border: 0;
+	font-weight: bold;
+}
+
+.btn-settings:hover {
+	color: #034154;
+}
+
+.settings-checkbox {
+	padding-left: 10px;
+}
+
 /* Images */
 
 .thumbnail {
@@ -383,10 +409,16 @@ label{
 
 
 // injector
+@import 'search/search-error/search-error.less';
+@import 'search/search-results/gallery/image-gallery.less';
 @import 'search/search.less';
+@import 'blurredImage/blurredImage.less';
 @import 'checkbox-filter/checkbox-filter-list/checkbox-filter-list.less';
+@import 'checkbox-filter/checkbox-filter.less';
 @import 'collapse-filter/collapse-filter.less';
+@import 'date-filter/date-range/date-range.less';
 @import 'date-histogram-aggregation/date-histogram-aggregation.less';
+@import 'expanded-listing-view/expanded-listing-view.less';
 @import 'modal/modal.less';
 @import 'wordle/wordle-chart.less';
 // endinjector

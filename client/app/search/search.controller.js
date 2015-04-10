@@ -4,30 +4,62 @@
 // by two $watch handlers.
 
 angular.module('digApp')
-.controller('SearchCtrl', ['$scope', '$state', '$http', 'imageSearchService', 'euiSearchIndex', 'euiConfigs',
-    function($scope, $state, $http, imageSearchService, euiSearchIndex, euiConfigs) {
+.controller('SearchCtrl', ['$scope', '$state', '$http', '$modal', 'imageSearchService', 'euiSearchIndex', 'euiConfigs', 'blurImageService',
+    function($scope, $state, $http, $modal, imageSearchService, euiSearchIndex, euiConfigs, blurImageService) {
     $scope.showresults = false;
-    $scope.currentOpened = 0;
-    $scope.selectedImage = 0;
-    $scope.queryString = {live: '', submitted: ''};
+    $scope.queryString = {
+        live: '',
+        submitted: ''
+    };
     $scope.loading = false;
     $scope.imagesimLoading = false;
     $scope.searchConfig = {};
     $scope.searchConfig.filterByImage = false;
-
     $scope.searchConfig.euiSearchIndex = '';
-
     $scope.imageSearchResults = {};
     $scope.euiConfigs = euiConfigs;
     $scope.facets = euiConfigs.facets;
-    $scope.opened = [];
     $scope.filterStates = {
         aggFilters: {},
-        textFilters: {}
+        textFilters: {},
+        dateFilters: {}
+    };
+    $scope.isBlurred = blurImageService.getBlurImagesEnabled() === 'blur' || blurImageService.getBlurImagesEnabled() === 'pixelate';
+    $scope.includeMissing = {
+        aggregations: {},
+        allIncludeMissing: false
+    };
+
+    $scope.changeBlur = function() {
+        $scope.isBlurred = !$scope.isBlurred;
+        blurImageService.changeBlurImagesEnabled($scope.isBlurred);
+    };
+
+    $scope.openAbout = function() {
+        $modal.open({
+          templateUrl: 'app/about/about.html',
+          controller: 'AboutCtrl',
+          size: 'sm'
+        });
     };
 
     $scope.removeAggFilter = function(key1, key2) {
         $scope.filterStates.aggFilters[key1][key2] = false;
+    };
+
+    $scope.removeMissingFilter = function(key) {
+        $scope.includeMissing.aggregations[key].active = false;
+    };
+
+    $scope.setAllIncludeMissing = function() {
+        $scope.includeMissing.allIncludeMissing = !$scope.includeMissing.allIncludeMissing;
+        for(var aggregation in $scope.includeMissing.aggregations) {
+            $scope.includeMissing.aggregations[aggregation].active = $scope.includeMissing.allIncludeMissing;
+        }
+    };
+
+    $scope.removeDateFilter = function(key1, key2) {
+        $scope.filterStates.dateFilters[key1][key2] = null;
     };
 
     $scope.removeTextFilter = function(textKey) {
@@ -43,32 +75,23 @@ angular.module('digApp')
         $scope.viewList();
     };
 
+    $scope.viewList = function() {
+        $state.go('search.results.list');
+    };
+
+    $scope.toggleImageSearchEnabled = function(searchUrl) {
+        imageSearchService.setImageSearchEnabled(searchUrl, !imageSearchService.isImageSearchEnabled(searchUrl));
+    };
+
     $scope.clearSearch = function() {
         $scope.queryString.live = '';
         $scope.submit();
     };
 
-    $scope.reload = function() {    
-        $state.go('search.list', {}, {'reload': true});
-    };
-
-    $scope.closeOthers = function(index, array) {
-        if($scope.currentOpened < array.length) {
-            array[$scope.currentOpened].isOpen = false;
-        }
-        $scope.currentOpened = index;
-    };
-
-    $scope.viewDetails = function(doc) {
-        $scope.doc = doc;
-        $state.go('search.list.details');
-    };
-
-    $scope.viewList = function() {
-        if($scope.doc) {
-            $scope.doc = null;
-        }
-        $state.go('search.list');
+    $scope.reload = function() {
+        $state.go('search.results.list', {}, {
+            reload: true
+        });
     };
 
     $scope.getActiveImageSearch = function() {
@@ -80,10 +103,6 @@ angular.module('digApp')
         imageSearchService.clearActiveImageSearch();
     };
 
-    $scope.selectImage = function(index) {
-        $scope.selectedImage = index;
-    };
-
     $scope.imageSearch = function(imgUrl) {
         imageSearchService.imageSearch(imgUrl);
     };
@@ -93,27 +112,37 @@ angular.module('digApp')
         var currentSearch = imageSearchService.getActiveImageSearch();
 
         // Default behavior.  Grab the only cached versions of the images from our docs.
-        if (doc._source.hasImagePart && doc._source.hasImagePart.cacheUrl) {
+        if(doc._source.hasImagePart && doc._source.hasImagePart.cacheUrl) {
             src = doc._source.hasImagePart.cacheUrl;
-        } else if (doc._source.hasImagePart[0] && doc._source.hasImagePart[0].cacheUrl) {
+        } else if(doc._source.hasImagePart[0] && doc._source.hasImagePart[0].cacheUrl) {
             src = doc._source.hasImagePart[0].cacheUrl;
         }
 
+        /* jshint camelcase:false */
         // If we have an active image search, check for a matching image.
-        if (imageSearchService.getActiveImageSearch() && doc._source.hasFeatureCollection.similar_images_feature) {
+        if(currentSearch &&
+            imageSearchService.isImageSearchEnabled(currentSearch.url) &&
+            doc._source.hasFeatureCollection.similar_images_feature) {
             var imgFeature = _.find(doc._source.hasFeatureCollection.similar_images_feature,
-                function(item) { return item.featureValue === currentSearch.url; });
+                function(item) {
+                    return item.featureValue === currentSearch.url;
+                });
 
             // Verify that the current search url is in the similar images feature.  If so, select the matching
             // image.
-            if (imgFeature) {
+            if(imgFeature) {
                 var imgObj = _.find(doc._source.hasFeatureCollection.similar_images_feature,
-                    function(item) { return (typeof item.featureObject !== 'undefined'); });
+                    function(item) {
+                        return (typeof item.featureObject !== 'undefined');
+                    });
                 var imgMatch = _.find(doc._source.hasImagePart,
-                    function(part) { return (part.uri === imgObj.featureObject.imageObjectUris[0]); });
+                    function(part) {
+                        return (part.uri === imgObj.featureObject.imageObjectUris[0]);
+                    });
                 src = (imgMatch && imgMatch.cacheUrl) ? imgMatch.cacheUrl : src;
             }
         }
+        /* jshint camelcase:true */
 
         return src;
     };
@@ -132,7 +161,7 @@ angular.module('digApp')
             if(newVal) {
                 if(newVal.status === 'searching') {
                     $scope.imagesimLoading = true;
-                } else if(newVal.status === 'success') {
+                } else if(newVal.status === 'success' && newVal.enabled) {
                     // If our latest img search was successful, re-issue our query and
                     // enable our image filter.
                     $scope.imagesimLoading = false;
@@ -153,20 +182,21 @@ angular.module('digApp')
             if(newValue !== oldValue) {
                 $scope.loading = newValue;
 
-                if($scope.loading === false && $scope.showresults === false && $scope.queryString.submitted) {
+                if($scope.loading === false && $scope.showresults === false && $scope.queryString.submitted && !$scope.indexVM.error) {
                     $scope.showresults = true;
-                    // Reset our page collapse states
-                    $scope.opened = [];
                 }
             }
         }
     );
 
-    $scope.$watch('indexVM.query', function(){
-        // Reset our opened document state and page on a new query.
-        $scope.opened = [];
-        $scope.indexVM.page = 1;
-    });
+    $scope.$watch('indexVM.error', function() {
+        if($scope.indexVM.error) {
+            $scope.loading = false;
+            $scope.showresults = false;
+
+            $state.go('search.error');
+        }
+    }, true);
 
     if($state.current.name === 'search') {
         $scope.viewList();

@@ -2,12 +2,13 @@
 
 var path = require('path');
 var _ = require('lodash');
+var pjson = require('../../../package.json');
 
 function requiredProcessEnv(name) {
-  if(!process.env[name]) {
-    throw new Error('You must set the ' + name + ' environment variable');
-  }
-  return process.env[name];
+    if(!process.env[name]) {
+        throw new Error('You must set the ' + name + ' environment variable');
+    }
+    return process.env[name];
 }
 
 // All configurations will extend these options
@@ -40,6 +41,7 @@ var all = {
             }
         }
     },
+    appVersion: pjson.version,
 
     euiServerUrl: process.env.EUI_SERVER_URL || 'karma-dig-service.cloudapp.net', //'http://localhost',
     euiServerPort: process.env.EUI_SERVER_PORT || 55310, //9200,
@@ -56,7 +58,7 @@ var all = {
     euiConfigs: {
         'dig-latest': {
             facets: {
-                euiFilters :[{
+                euiFilters: [{
                     title: 'Phone',
                     type: 'eui-filter',
                     field: 'phonenumber',
@@ -72,42 +74,84 @@ var all = {
                     type: 'eui-aggregation',
                     field: 'city_agg',
                     terms: 'hasFeatureCollection.place_postalAddress_feature.featureObject.addressLocality',
+                    termsType: 'string',
                     count: 30
                 },{
                     title: 'Ethnicity',
                     type: 'eui-aggregation',
                     field: 'etn_agg',
                     terms: 'person_ethnicity',
+                    termsType: 'string',
                     count: 20
                 },{
                     title: 'Hair Color',
                     type: 'eui-aggregation',
                     field: 'hc_agg',
                     terms: 'person_haircolor',
+                    termsType: 'string',
                     count: 10
                 },{
                     title: 'Age',
                     type: 'eui-aggregation',
                     field: 'age_agg',
                     terms: 'person_age',
+                    termsType: 'number',
                     count: 10
+                },{
+                    title: 'Provider',
+                    type: 'eui-aggregation',
+                    field: 'provider_agg',
+                    terms: 'provider_name',
+                    termsType: 'string',
+                    count: 10
+                }],
+                dateFilters: [{
+                    title: 'Date',
+                    aggName: 'date_agg',
+                    field: 'dateCreated'
                 }]
             },
-
+            highlight: {
+                fields: [
+                'hasBodyPart.text',
+                'hasTitlePart.text'
+                ]
+            },
+            sort: {
+                field: 'dateCreated',
+                defaultOption: {
+                    order: 'rank', title: 'Best Match'
+                },
+                options: [
+                    {
+                        order: 'rank',
+                        title: 'Best Match'
+                    },{
+                        order: 'desc',
+                        title: 'Newest First'
+                    },{
+                        order: 'asc',
+                        title: 'Oldest First'
+                    }
+                ]
+            },
+            lastUpdateQuery: {
+                field: 'dateCreated'
+            },
             listFields: {
-                "title": [{
+                title: [{
                     title: 'Title',
                     type: 'title',
-                    field: 'doc._source.hasTitlePart.text',
+                    field: 'doc.highlight["hasTitlePart.text"][0] || doc._source.hasTitlePart.text',
                     section: 'title'
                 }],
-                "short": [{
+                short: [{
                     title: 'Date',
-                    field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss'",
+                    field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss UTC'",
                     classes: 'date'
                 },{
                     title: 'Location',
-                    field: 'doc._source.hasFeatureCollection.place_postalAddress_feature.featureObject.addressLocality',
+                    field: 'doc._source.hasFeatureCollection.place_postalAddress_feature.featureObject.addressLocality || doc._source.hasFeatureCollection.place_postalAddress_feature[0].place_postalAddress',
                     classes: 'location'
                 },{
                     title: 'Phone',
@@ -122,7 +166,7 @@ var all = {
                     field: 'doc._source.hasFeatureCollection.person_age_feature.person_age || doc._source.hasFeatureCollection.person_age_feature[0].person_age',
                     classes: 'age'
                 }],
-                "full": {
+                full: {
                     "1": {
                         classes: 'listing-details',
                         fields: [{
@@ -151,6 +195,14 @@ var all = {
                             field: 'doc._source.hasFeatureCollection.website_feature.website',
                             featureArray: 'doc._source.hasFeatureCollection.website_feature',
                             featureValue: 'website'
+                        },{
+                            title: 'Provider',
+                            field: 'doc._source.hasFeatureCollection.provider_name_feature.provider_name',
+                            featureArray: 'doc._source.hasFeatureCollection.provider_name_feature',
+                            featureValue: 'provider_name'
+                        },{
+                            title: 'Created',
+                            field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss UTC'"
                         }]
                     },
                     "2": {
@@ -184,11 +236,16 @@ var all = {
                     }
                 }
             },
-
+            debugFields: {
+                fields: ['doc._id']
+            },
             detailFields: {
                 "1": {
                     classes: 'listing-details',
                     fields: [{
+                        title: 'Created',
+                        field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss UTC'"
+                    },{
                         title: 'City',
                         field: 'doc._source.hasFeatureCollection.place_postalAddress_feature.featureObject.addressLocality',
                         featureArray: 'doc._source.hasFeatureCollection.place_postalAddress_feature',
@@ -351,20 +408,26 @@ var all = {
                         featureArray: "doc['_source']['hasFeatureCollection']['person_travel_feature ']",
                         featureValue: 'person_travel',
                         hideIfMissing: true
+                    },{
+                        title: 'Provider',
+                        field: 'doc._source.hasFeatureCollection.provider_name_feature.provider_name',
+                        featureArray: 'doc._source.hasFeatureCollection.provider_name_feature',
+                        featureValue: 'provider_name'
                     }]
                 },
                 "3": {
                     classes: "",
                     fields: [{
-                        field: 'doc._source.hasBodyPart.text',
+                        field: 'doc.highlight["hasBodyPart.text"][0] || doc._source.hasBodyPart.text',
                         hideIfMissing: true
                     }]
                 }
-            }
+            },
+            imageField: 'hasImagePart.cacheUrl'
         },
         'dig-mrs-latest': {
             facets: {
-                euiFilters :[],
+                euiFilters: [],
                 //simFilter: {},
                 aggFilters: [{
                     title: 'Provider',
@@ -415,15 +478,15 @@ var all = {
             },
 
             listFields: {
-                "title": [{
+                title: [{
                     title: 'Title',
                     type: 'title',
                     field: 'doc._source.hasTitlePart.text',
                     section: 'title'
                 }],
-                "short": [{
+                short: [{
                     title: 'Date',
-                    field: "doc._source.dateCreated || doc._source.datePublished | date:'MM/dd/yyyy HH:mm:ss'",
+                    field: "doc._source.dateCreated || doc._source.datePublished | date:'MM/dd/yyyy HH:mm:ss UTC'",
                     classes: 'date',
                 },{
                     title: 'Author',
@@ -478,8 +541,6 @@ var all = {
                         },{
                             title: 'Abstract',
                             field: "doc['_source']['hasAbstractPart']['text']"
-                        }
-			]
                     }
                 }
             },
@@ -489,7 +550,7 @@ var all = {
                     classes: 'listing-details',
                     fields: [{
                         title: 'Date',
-                        field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss'",
+                        field: "doc._source.dateCreated | date:'MM/dd/yyyy HH:mm:ss UTC'",
                         classes: 'date'
                     }, {
                         title: 'DOI',

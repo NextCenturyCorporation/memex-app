@@ -8,10 +8,12 @@ angular.module('digApp.directives')
             aggregationName: '@',
             aggregationKey: '@',
             aggregationCount: '&',
+            aggregationTermsType: '@',
             indexVM: '=indexvm',
             ejs: '=',
             filters: '=',
-            filterStates: '='
+            filterStates: '=',
+            includeMissing: '='
         },
         templateUrl: 'components/checkbox-filter/checkbox-filter.partial.html',
         link: function($scope) {

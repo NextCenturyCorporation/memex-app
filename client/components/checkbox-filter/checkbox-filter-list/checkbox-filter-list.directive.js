@@ -7,6 +7,7 @@ angular.module('digApp.directives')
         scope: {
             aggregationName: '@',
             aggregationKey: '@',
+            aggregationTermsType: '@',
             userDisplayCount: '=searchCount',
             buckets: '=',
             indexVM: '=indexvm',
@@ -38,7 +39,7 @@ angular.module('digApp.directives')
             $scope.less = function() {
                 if($scope.userDisplayCount > 10) {
                     $scope.userDisplayCount -= 10;
-                    if ($scope.userDisplayCount < 10) {
+                    if($scope.userDisplayCount < 10) {
                         $scope.userDisplayCount = 10;
                     }
                     $scope.resetDisplayBuckets();
@@ -47,7 +48,7 @@ angular.module('digApp.directives')
 
             $scope.all = function() {
                 if($scope.facetCount > 10) {
-                    if ($scope.showAll) {
+                    if($scope.showAll) {
                         $scope.userDisplayCount = $scope.lastDisplayCount;
                     } else {
                         $scope.lastDisplayCount = $scope.userDisplayCount;
@@ -69,13 +70,13 @@ angular.module('digApp.directives')
                 var aggObj = null;
 
                 // Return false if we have no aggregations or none on that field.
-                if (!$scope.buckets) {
+                if(!$scope.buckets) {
                     return false;
                 }
 
                 aggObj = (_.filter($scope.buckets, function(bucket) {
-                        return (bucket.key && bucket.key == term);
-                    }));
+                    return (bucket.key && bucket.key == term);
+                }));
 
                 return (aggObj.length !== 0) ? aggObj[0] : false;
             };
@@ -85,11 +86,10 @@ angular.module('digApp.directives')
 
                 $scope.displayBuckets = [];
                 var checkedItems = [];
-                var bucket;
 
                 // Get checked items and add to display buckets if they dropped out of our aggregations.
-                for (var term in $scope.filterStates[$scope.aggregationName]) {
-                    if ($scope.filterStates[$scope.aggregationName].hasOwnProperty(term) &&
+                for(var term in $scope.filterStates[$scope.aggregationName]) {
+                    if($scope.filterStates[$scope.aggregationName].hasOwnProperty(term) &&
                         $scope.filterStates[$scope.aggregationName][term]) {
                         checkedItems.push(term);
                     }
@@ -99,24 +99,31 @@ angular.module('digApp.directives')
                 var numBuckets = ($scope.buckets) ? $scope.buckets.length : 0;
                 var remainingBucketSlots = Math.min($scope.userDisplayCount, numBuckets);
 
-                for (var i = 0; i < remainingBucketSlots; i++) {
+                for(var i = 0; i < remainingBucketSlots; i++) {
                     $scope.displayBuckets.push($scope.buckets[i]);
                 }
 
                 // Add hidden fields for any checked items that didn't come
                 // back in our current aggregation set.  This is necessary to
                 // keep the eui directives in sync with the user state.  If no
-                // controll for this these are in the page, it will result in 
+                // controll for this these are in the page, it will result in
                 // extraneous filters being applied to elastic query searches.
-                for (i = 0; i < checkedItems.length; i++) {
-                    if (!_.find($scope.displayBuckets, function(item) {
+                for(i = 0; i < checkedItems.length; i++) {
+                    if(!_.find($scope.displayBuckets, function(item) {
                         // Converting the key to a string since checkedItems is populated by string keys.
                         return ((item.key) ? item.key.toString() : '') === checkedItems[i];
                     })) {
+                        var key;
+                        if($scope.aggregationTermsType === 'number') {
+                            key = Number(checkedItems[i]);
+                        } else {
+                            key = checkedItems[i];
+                        }
+
                         /* jshint camelcase:false */
                         $scope.displayBuckets.push({
                             // TODO: Configure better type checking in euiConfigs mapping
-                            key: (isNaN(checkedItems[i]) ? checkedItems[i] : Number(checkedItems[i])),
+                            key: key,
                             doc_count: 0,
                             hidden: true
                         });
