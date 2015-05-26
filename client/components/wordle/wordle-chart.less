@@ -1,0 +1,37 @@
+.wordle-chart .tick:first-of-type text {
+	text-anchor: start !important;
+}
+
+.wordle-chart .tick:nth-of-type(5) text {
+	text-anchor: end !important;
+}
+
+.wordle-chart {
+	overflow-x: visible;
+	overflow-y: visible;
+	position: relative;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	min-height: 150px;
+}
+
+.wordle-canvas {
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .wordle-canvas.hide {
+    display: none;
+  }
+
+  .wordle-html-canvas > span {
+    transition: text-shadow 1s ease, opacity 1s ease;
+    -webkit-transition: text-shadow 1s ease, opacity 1s ease;
+    -ms-transition: text-shadow 1s ease, opacity 1s ease;
+  }
+
+  .wordle-html-canvas > span:hover {
+    text-shadow: 0 0 10px, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+    opacity: 0.5;
+  }
